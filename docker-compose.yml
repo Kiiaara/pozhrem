@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: pozhrem_db
+    restart: always
+    environment:
+      POSTGRES_USER: nourish_user
+      POSTGRES_PASSWORD: nourish_password
+      POSTGRES_DB: nourish_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: pozhrem_backend
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://nourish_user:nourish_password@db:5432/nourish_db
+      - PROXYAPI_KEY=${PROXYAPI_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend/nourish
+      dockerfile: Dockerfile
+    container_name: pozhrem_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
